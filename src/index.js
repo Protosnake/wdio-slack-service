@@ -1,5 +1,6 @@
 const { IncomingWebhook } = require("@slack/webhook");
-const failedColor = "#E51670";
+const failedColor = "#ff0000";
+const successColor = "#7CFC00";
 class SlackService {
     constructor(config) {
         this.config = config;
@@ -9,8 +10,12 @@ class SlackService {
             );
             return;
         }
+        if (!this.config.notify) {
+            console.debug("[slack-reporter] Slack reporter is disabled")
+            return;
+        }
         this.webhook = new IncomingWebhook(this.config.webhook);
-        this.message = this.config.message || "Running Tests Report";
+        this.message = this.config.message || "Starting a test job";
         this.attachments = [
             {
                 pretext: `*${this.message}*`,
@@ -19,9 +24,10 @@ class SlackService {
     }
 
     afterTest(test) {
-        if (test.passed === false) {
+        if (test.passed) {
+            console.log(test); 
             let attach = {
-                color: failedColor,
+                color: successColor,
                 author_name: test.fullTitle,
                 footer: test.error.stack,
                 ts: Date.now()
